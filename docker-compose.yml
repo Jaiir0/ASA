@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  dns:
+    build: 
+      context: ./dns
+    container_name: dns
+    ports:
+      - "53:53/udp"
+      - "53:53/tcp"
+
+  web:
+    build:
+      context: ./web
+    container_name: web01
+ 
+  web02:
+    build:
+      context: ./web02
+    container_name: web02
+
+  proxy:
+    build:
+      context: ./proxy
+    container_name: proxy_container
+    ports:
+      -  "80:80/tcp"
+      -  "443:443/tcp"
+    depends_on:
+      - web
+      - web02
+
+

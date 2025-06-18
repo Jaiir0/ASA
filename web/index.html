@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Teoria Essencial sobre Proxies</title>
+
+  <!-- ====  PALETA BASE  ==== -->
+  <style>
+    :root {
+      /* fundo em degradê verde‑azulado muito escuro  */
+      --bg-start: #00231d;
+      --bg-end:   #010d12;
+
+      /* gradiente naslov (verde‑ciano) */
+      --grad-a: #3af28c;
+      --grad-b: #00e0ff;
+
+      /* tons de texto */
+      --text-primary: #E4F5F4;
+      --text-secondary: #b5c7c6;
+
+      /* caixas internas (leve tonalidade) */
+      --box: #042d25;
+
+      /* bordas / detalhes */
+      --stroke: #00e0ff;
+
+      /* botão – roxo / violeta */
+      --btn-a: #c868f6;
+      --btn-b: #9c4dff;
+    }
+
+    /* ===== Reset rápido ===== */
+    *{margin:0;padding:0;box-sizing:border-box;font-family:"Segoe UI",Tahoma,Verdana,sans-serif;}
+
+    body{
+      min-height:100vh;
+      background: radial-gradient(circle at 50% 0%, var(--bg-start) 0%, var(--bg-end) 100%);
+      color:var(--text-primary);
+      line-height:1.6;
+      display:flex;
+      flex-direction:column;
+    }
+
+    /* ===== Navegação simples – opcional ===== */
+    nav{
+      max-width:1200px;
+      margin:0 auto;
+      padding:1rem 2rem;
+      display:flex;
+      justify-content:flex-end;
+      gap:1.5rem;
+      font-size:.9rem;
+    }
+    nav a{
+      color:var(--text-secondary);
+      text-decoration:none;
+      padding:.4rem 1rem;
+      border:1px solid transparent;
+      border-radius:999px;
+      transition:.25s;
+    }
+    nav a:hover{
+      border-color:var(--stroke);
+      color:var(--stroke);
+    }
+
+    /* ===== Cabeçalho com título gradiente ===== */
+    header{
+      text-align:center;
+      padding:3.5rem 1rem 2rem;
+    }
+    .title{
+      font-size:clamp(2rem,5vw,3.2rem);
+      font-weight:700;
+      background:linear-gradient(90deg,var(--grad-a),var(--grad-b));
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
+    }
+    .subtitle{
+      font-size:1rem;
+      color:var(--text-secondary);
+      margin-top:.6rem;
+    }
+
+    /* ===== Conteúdo principal ===== */
+    main{
+      width:min(900px, 93%);
+      margin:0 auto 4rem;
+      background:rgba(255,255,255,0.02);
+      backdrop-filter:blur(6px);
+      border:1px solid rgba(255,255,255,0.05);
+      border-radius:16px;
+      padding:2rem 1.6rem 3rem;
+      box-shadow:0 0 24px rgba(0,0,0,0.25);
+    }
+    h2{
+      margin-top:1.8rem;
+      font-size:1.65rem;
+      background:linear-gradient(90deg,var(--grad-a),var(--grad-b));
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      margin-bottom:.8rem;
+    }
+    h3{
+      margin-top:1.2rem;
+      color:var(--grad-b);
+      font-size:1.15rem;
+    }
+    p,li{
+      color:var(--text-secondary);
+      font-size:.95rem;
+    }
+    ul,ol{margin-left:1.4rem;margin-bottom:1rem;}
+    li{margin-bottom:.45rem;}
+
+    /* ===== Diagramas & boxes ===== */
+    .simple-diagram, .diagram-box, .note-box{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+    .simple-diagram{
+      gap:.6rem;
+      margin:2rem 0 1rem;
+    }
+    .diagram-box{
+      background:var(--box);
+      border:2px solid var(--stroke);
+      border-radius:10px;
+      padding:1rem;
+      min-width:120px;
+      text-align:center;
+      font-weight:600;
+      color:var(--text-primary);
+    }
+    .diagram-arrow{
+      font-size:2rem;
+      color:var(--stroke);
+    }
+
+    .note-box{
+      background:#14352d;
+      border-left:4px solid var(--grad-b);
+      padding:1rem;
+      border-radius:8px;
+      margin:1.5rem 0;
+      color:var(--text-secondary);
+      font-style:italic;
+    }
+
+    /* ===== Tabela ===== */
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin:1.5rem 0;
+      font-size:.9rem;
+    }
+    th,td{padding:.8rem;border:1px solid #073228;}
+    th{background:var(--box);color:var(--grad-b);}
+    tr:nth-child(even){background:#092d25;}
+
+    code{
+      background:#021814;
+      padding:3px 6px;
+      border-radius:4px;
+      color:var(--grad-b);
+    }
+
+    /* ===== Footer ===== */
+    footer{
+      margin-top:auto;
+      text-align:center;
+      font-size:.8rem;
+      color:var(--text-secondary);
+      padding:2.5rem 1rem;
+    }
+
+    /* ===== Responsivo ===== */
+    @media(max-width:640px){
+      nav{justify-content:center;font-size:.8rem;}
+      .simple-diagram{flex-direction:column;}
+      .diagram-arrow{display:none;}
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Navegação simples (opcional) -->
+  <nav>
+    <a href="#basic-concepts">Conceitos</a>
+    <a href="#proxy-types">Tipos</a>
+    <a href="#comparison">Comparativo</a>
+    <a href="#when-to-use">Quando usar</a>
+  </nav>
+
+  <!-- Cabeçalho -->
+  <header>
+    <h1 class="title">Teoria Essencial sobre Proxies</h1>
+    <p class="subtitle">Como funcionam e quando usar cada tipo</p>
+  </header>
+
+  <!-- Conteúdo mantido – apenas “vestido” com o novo visual -->
+  <main>
+    <!-- ==== CONCEITOS BÁSICOS ==== -->
+    <section id="basic-concepts">
+      <h2>O Que é um Proxy?</h2>
+      <p>
+        Um proxy é um servidor intermediário que fica entre um cliente (como seu navegador) e a Internet.
+        Ele age como um “representante” que faz requisições em seu nome, podendo modificar, filtrar
+        ou armazenar as respostas.
+      </p>
+
+      <div class="simple-diagram">
+        <div class="diagram-box">Seu Computador</div>
+        <div class="diagram-arrow">➔</div>
+        <div class="diagram-box">Servidor Proxy</div>
+        <div class="diagram-arrow">➔</div>
+        <div class="diagram-box">Internet</div>
+      </div>
+    </section>
+
+    <!-- ==== COMO FUNCIONA ==== -->
+    <section id="how-it-works">
+      <h2>Como Funciona?</h2>
+      <ol>
+        <li>Seu dispositivo envia uma requisição para o proxy em vez de diretamente para o site;</li>
+        <li>O proxy avalia a requisição (pode bloquear ou modificar);</li>
+        <li>Se permitido, o proxy encaminha a requisição ao destino;</li>
+        <li>O proxy recebe a resposta do servidor;</li>
+        <li>O proxy pode armazenar em cache ou filtrar a resposta;</li>
+        <li>A resposta final é enviada de volta para você.</li>
+      </ol>
+
+      <div class="note-box">
+        <strong>Exemplo prático:</strong> quando uma empresa bloqueia redes sociais,
+        está usando um proxy para filtrar requisições aos domínios do Facebook, Twitter, etc.
+      </div>
+    </section>
+
+    <!-- ==== TIPOS DE PROXY ==== -->
+    <section id="proxy-types">
+      <h2>Principais Tipos de Proxy</h2>
+
+      <h3>1. Proxy Direto (Forward Proxy)</h3>
+      <ul>
+        <li>Usado por clientes para acessar a internet;</li>
+        <li>Pode esconder o IP real do usuário;</li>
+        <li>Comum em redes corporativas e escolas.</li>
+      </ul>
+
+      <h3>2. Proxy Reverso (Reverse Proxy)</h3>
+      <ul>
+        <li>Fica na frente de servidores web;</li>
+        <li>Melhora segurança e performance;</li>
+        <li>Usado por grandes sites (Facebook, Netflix).</li>
+      </ul>
+
+      <h3>3. Proxy Transparente</h3>
+      <ul>
+        <li>O usuário não sabe que está usando;</li>
+        <li>Comum em redes públicas (aeroportos, hotéis);</li>
+        <li>Pode filtrar conteúdo sem configuração no cliente.</li>
+      </ul>
+    </section>
+
+    <!-- ==== COMPARATIVO ==== -->
+    <section id="comparison">
+      <h2>Comparativo: HTTP Proxy vs SOCKS vs Proxy Reverso</h2>
+      <table>
+        <tr>
+          <th>Característica</th>
+          <th>HTTP Proxy</th>
+          <th>SOCKS Proxy</th>
+          <th>Proxy Reverso</th>
+        </tr>
+        <tr>
+          <td>Uso principal</td>
+          <td>Filtrar navegação web</td>
+          <td>Conexões genéricas (jogos, torrents)</td>
+          <td>Proteger servidores web</td>
+        </tr>
+        <tr>
+          <td>Nível de funcionamento</td>
+          <td>Entende HTTP/HTTPS</td>
+          <td>Trabalha com qualquer tráfego TCP</td>
+          <td>Otimizado para HTTP/HTTPS</td>
+        </tr>
+        <tr>
+          <td>Performance</td>
+          <td>Boa (pode fazer cache)</td>
+          <td>Mais lento (sem cache)</td>
+          <td>Excelente (balanceamento)</td>
+        </tr>
+        <tr>
+          <td>Exemplos</td>
+          <td>Squid, Blue Coat</td>
+          <td>Shadowsocks, Dante</td>
+          <td>Nginx, Cloudflare</td>
+        </tr>
+      </table>
+    </section>
+
+    <!-- ==== QUANDO USAR ==== -->
+    <section id="when-to-use">
+      <h2>Quando Usar Cada Tipo?</h2>
+
+      <h3>Use um Proxy Direto quando:</h3>
+      <ul>
+        <li>Precisa controlar acesso à internet em uma rede;</li>
+        <li>Quer navegar anonimamente (esconder seu IP);</li>
+        <li>Necessita filtrar conteúdo inapropriado.</li>
+      </ul>
+
+      <h3>Use um Proxy Reverso quando:</h3>
+      <ul>
+        <li>Está administrando um servidor web;</li>
+        <li>Precisa proteger seu servidor de ataques;</li>
+        <li>Quer balancear carga entre vários servidores.</li>
+      </ul>
+
+      <h3>Use SOCKS quando:</h3>
+      <ul>
+        <li>Precisa de um proxy para aplicativos não‑web (jogos, torrents);</li>
+        <li>Quer maior anonimato (combinado com Tor, por exemplo).</li>
+      </ul>
+    </section>
+
+    <!-- ==== CONCLUSÃO ==== -->
+    <section id="conclusion">
+      <h2>Conclusão</h2>
+      <p>
+        Proxies são ferramentas poderosas que servem a propósitos variáveis – do controle de acesso
+        à proteção de servidores. Entender as diferenças entre os tipos principais ajuda a escolher
+        a solução correta para cada necessidade.
+      </p>
+      <p>
+        Em resumo: proxies diretos protegem clientes, proxies reversos protegem servidores,
+        e SOCKS é a opção mais flexível para tráfego não‑web.
+      </p>
+    </section>
+  </main>
+
+  <!-- Rodapé -->
+  <footer>
+    Guia básico sobre proxies • Atualizado em 2025 • Para fins educacionais
+  </footer>
+</body>
+</html>
+
